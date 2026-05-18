@@ -21,6 +21,13 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // command for tinker to interacte and use db without a gui 
+        // \DB::table('chirps')->insert([
+        //     'message' => "my first message created using tinker",
+        //     'created_at' => now(),
+        //     'updated_at' => now()
+        // ]);
+
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
