@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Chirp;
 
 class ChirpController extends Controller
 {
@@ -11,31 +12,17 @@ class ChirpController extends Controller
      */
     public function index()
     {
-       
-        $chirps = [
-            [ 
-                "author" => "John Doe",
-                "message" => "Hello world",
-                "time" => "2 hours ago"
-            ],
-            [ 
-                "author" => "test 2",
-                "message" => "Hello world",
-                "time" => "2 hours ago"
-            ],
-            [ 
-                "author" => "John nnn",
-                "message" => "Hello world",
-                "time" => "2 hours ago"
-            ]
-            ];
+
+        $chirps = Chirp::with('user')
+            ->latest()
+            ->take(50)
+            ->get();
         return view('home', ['chirps' => $chirps]);
-   
     }
 
-    public function login(){
+    public function login()
+    {
         return view('login');
-
     }
 
     /**
@@ -51,7 +38,22 @@ class ChirpController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        //first validate the request
+        $validated = $request->validate([
+            'message' => 'required|string|max:255',
+        ], [
+            'message.required' => 'Please write something to chirp!',
+            'message.max' => 'Chirps must be 255 characters or less.',
+        ]);
+
+        // second create the chirp (no user for now - auth not implemented yet)
+
+        chirp::create([
+            'message' => $validated['message'],
+            'user_id' => null,
+        ]);
+
+        return redirect('/')->with('success', 'Your chirp has been posted!!');
     }
 
     /**
@@ -63,26 +65,42 @@ class ChirpController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     *      * Update the specified resource in storage.
+
      */
-    public function edit(string $id)
+    public function update(request $request, Chirp $chirp)
     {
-        //
+        //first validate the request
+        $validated = $request->validate([
+            'message' => 'required|string|max:255',
+        ], [
+            'message.required' => 'Please write something to chirp!',
+            'message.max' => 'Chirps must be 255 characters or less.',
+        ]);
+
+        // second create the chirp (no user for now - auth not implemented yet)
+
+        $chirp->update($validated);
+
+        return redirect('/')->with('success', 'Your chirp has been updated!');
     }
 
     /**
-     * Update the specified resource in storage.
+     * Show the form for editing the specified resource.
      */
-    public function update(Request $request, string $id)
+    public function edit(Chirp $chirp)
     {
-        //
+        // return the view
+        return view('chirps.edit', compact('chirp'));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Chirp $chirp)
     {
-        //
+        $chirp->delete();
+
+        return redirect('/')->with('success', 'Chirp deleted!');
     }
 }
