@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use App\Models\Chirp;
 
 class ChirpController extends Controller
 {
+
+    // allow controller to use authorize method
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
@@ -48,10 +52,14 @@ class ChirpController extends Controller
 
         // second create the chirp (no user for now - auth not implemented yet)
 
-        chirp::create([
-            'message' => $validated['message'],
-            'user_id' => null,
-        ]);
+        // chirp::create([
+        //     'message' => $validated['message'],
+        //     'user_id' => null,
+        // ]);
+
+        auth()->user()->chirps()->create($validated);
+
+
 
         return redirect('/')->with('success', 'Your chirp has been posted!!');
     }
@@ -70,6 +78,7 @@ class ChirpController extends Controller
      */
     public function update(request $request, Chirp $chirp)
     {
+        $this->authorize('update', $chirp);
         //first validate the request
         $validated = $request->validate([
             'message' => 'required|string|max:255',
@@ -90,6 +99,7 @@ class ChirpController extends Controller
      */
     public function edit(Chirp $chirp)
     {
+        $this->authorize('edit', $chirp);
         // return the view
         return view('chirps.edit', compact('chirp'));
     }
@@ -99,6 +109,7 @@ class ChirpController extends Controller
      */
     public function destroy(Chirp $chirp)
     {
+        $this->authorize('delete', $chirp);
         $chirp->delete();
 
         return redirect('/')->with('success', 'Chirp deleted!');
